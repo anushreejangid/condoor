@@ -7,7 +7,7 @@ import pexpect
 
 from condoor.exceptions import CommandSyntaxError, CommandTimeoutError, ConnectionError
 from condoor.actions import a_connection_closed, a_expected_prompt, a_stays_connected, a_unexpected_prompt, a_send, \
-    a_store_cmd_result, a_message_callback, a_send_line, a_reconnect, a_send_boot
+    a_store_cmd_result, a_message_callback, a_send_line, a_reconnect, a_send_boot, a_standby_console
 from condoor.utils import pattern_to_str
 from condoor.fsm import FSM
 from condoor.drivers.generic import Driver as Generic
@@ -121,16 +121,19 @@ class Driver(Generic):
         CONFIGURATION_COMPLETED = re.compile("SYSTEM CONFIGURATION COMPLETED")
         CONFIGURATION_IN_PROCESS = re.compile("SYSTEM CONFIGURATION IN PROCESS")
         BOOTING = re.compile("Booting IOS-XR 64 bit Boot previously installed image")
+        STANDBY = re.compile("ios con[0|1]/(?:RS?P)?[0-1]/CPU0 is in standby")
+        NOT_READY = re.compile("RP Node is not ready or active for login")
 
         # events = [RELOAD_NA, DONE, PROCEED, CONFIGURATION_IN_PROCESS, self.rommon_re, self.press_return_re,
-        #           #   6               7                       8                     9      10        11
-        #           CONSOLE, CONFIGURATION_COMPLETED, RECONFIGURE_USERNAME_PROMPT, TIMEOUT, EOF, self.reload_cmd,
+        #           #   6               7                       8                     9      10       11
+        #           CONSOLE, CONFIGURATION_COMPLETED, RECONFIGURE_USERNAME_PROMPT, TIMEOUT, EOF, STANDBY,
         #           #    12                    13                     14
-        #           ROOT_USERNAME_PROMPT, ROOT_PASSWORD_PROMPT, CANDIDATE_BOOT_IMAGE]
+        #           NOT_READY, ROOT_PASSWORD_PROMPT, CANDIDATE_BOOT_IMAGE]
 
         events = [self.reload_cmd, RELOAD_PROMPT, START_TO_BACKUP, BACKUP_HAS_COMPLETED_SUCCESSFULLY, DONE, BOOTING,
-                  CONSOLE, self.press_return_re, CONFIGURATION_COMPLETED, CONFIGURATION_IN_PROCESS, EOF]
-
+                  CONSOLE, self.press_return_re, CONFIGURATION_COMPLETED, CONFIGURATION_IN_PROCESS, EOF, STANDBY,
+                  NOT_READY]
+        logger.debug("I am here in reload")
         transitions = [
             # do I really need to clean the cmd
             (RELOAD_PROMPT, [0], 1, partial(a_send_line, "yes"), 30),
@@ -143,11 +146,13 @@ class Driver(Generic):
             (self.press_return_re, [6], 7, partial(a_send, "\r"), 300),
             (CONFIGURATION_IN_PROCESS, [7], 8, None, 180),
             (CONFIGURATION_COMPLETED, [8], -1, a_reconnect, 0),
+            (STANDBY, [0, 5], 11 , partial(a_standby_console), 300),
+            (NOT_READY, [0, 5], 12 , partial(a_standby_console), 300),
             (EOF, [0, 1, 2, 3, 4, 5], -1, ConnectionError("Device disconnected"), 0),
 
             # (RELOAD_NA, [1], -1, a_reload_na, 0),
             # (DONE, [1], 2, None, 120),
-            # (PROCEED, [2], 3, partial(a_send, "\r"), reload_timeout),
+            # (PROCEED, [2], 3, partial(a_send, "\r"), Transition for non-existing eventreload_timeout),
             # (self.rommon_re, [0, 3], 4, partial(a_send_boot, "boot"), 600),
             # (CANDIDATE_BOOT_IMAGE, [0, 3], 4, a_message_callback, 600),
             # (CONSOLE, [0, 1, 3, 4], 5, None, 600),

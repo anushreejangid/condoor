@@ -212,6 +212,7 @@ class Connection(object):
                     break
             except (ConnectionTimeoutError, ConnectionError) as e:  # pylint: disable=invalid-name
                 self.emit_message("Connection error: {}".format(e), log_level=logging.ERROR)
+                chain.disconnect()
                 excpt = e
 
             attempt += 1

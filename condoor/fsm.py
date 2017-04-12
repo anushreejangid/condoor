@@ -126,6 +126,7 @@ class FSM(object):
         compiled = {}
         for transition in transitions:
             event, states, new_state, act, timeout = transition
+            logger.debug("events: {} {} {} {}".format(event, states, new_state, timeout))
             if not isinstance(states, list):
                 states = list(states)
             try:

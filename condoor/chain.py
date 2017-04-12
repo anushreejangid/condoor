@@ -42,15 +42,16 @@ class Chain(object):
     def connect(self):
         """Connect to the target device using the intermediate jumphosts."""
         device = None
-        # logger.debug("Connecting to: {}".format(str(self)))
+        logger.debug("Connecting to: {}".format(str(self)))
         for device in self.devices:
+            logger.info("Device: {}, Status: {}".format(str(device), device.connected))
             if not device.connected:
                 self.connection.emit_message("Connecting {}".format(str(device)), log_level=logging.INFO)
                 protocol_name = device.get_protocol_name()
                 device.protocol = make_protocol(protocol_name, device)
                 self.ctrl.spawn_session(device.protocol.get_command())
                 if device.connect(self.ctrl):
-                    # logger.info("Connected to {}".format(device))
+                    logger.info("Connected to {}".format(device))
                     self.connection.emit_message("Connected {}".format(device), log_level=logging.INFO)
                 else:
                     if device.last_error_msg:
@@ -69,9 +70,20 @@ class Chain(object):
 
     def disconnect(self):
         """Disconnect from the device."""
-        self.target_device.disconnect()
-        self.ctrl.disconnect()
-        self.tail_disconnect(-1)
+        for device in self.devices:
+            device.connected = False
+        try:
+            self.target_device.disconnect()
+        except:
+            pass
+        try:
+            self.ctrl.disconnect()
+        except:
+            pass
+        try:
+            self.tail_disconnect(-1)
+        except:
+            pass
 
     @property
     def target_device(self):
