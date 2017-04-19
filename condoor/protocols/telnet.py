@@ -44,7 +44,8 @@ class Telnet(Protocol):
                   #            4                   5                  6                     7
                   driver.password_re, driver.more_re, self.device.prompt_re, driver.rommon_re,
                   #       8                              9              10            11
-                  driver.unable_to_connect_re, driver.timeout_re, pexpect.TIMEOUT, PASSWORD_OK]
+                  driver.unable_to_connect_re, driver.timeout_re, pexpect.TIMEOUT, PASSWORD_OK,
+                  driver.confirm_prompt_re]
 
         transitions = [
             (ESCAPE_CHAR, [0], 1, None, _C['esc_char_timeout']),
@@ -64,6 +65,7 @@ class Telnet(Protocol):
             (driver.timeout_re, [0, 1], -1, ConnectionTimeoutError("Connection Timeout", self.hostname), 0),
             (pexpect.TIMEOUT, [0, 1], 5, partial(a_send, "\r\n"), 10),
             (pexpect.TIMEOUT, [5], -1, ConnectionTimeoutError("Connection timeout", self.hostname), 0)
+            (driver.confirm_prompt_re, [0, 1], -1, partial(a_send, "yes"), 10),
         ]
 
         logger.debug("EXPECTED_PROMPT={}".format(pattern_to_str(self.device.prompt_re)))

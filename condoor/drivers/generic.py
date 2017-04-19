@@ -50,6 +50,7 @@ class Driver(object):
         self.version_re = pattern_manager.pattern(self.platform, 'version', compiled=False)
         self.vty_re = pattern_manager.pattern(self.platform, 'vty')
         self.console_re = pattern_manager.pattern(self.platform, 'console')
+        self.confirm_option_re = pattern_manager.pattern(self.platform, 'confirm_option')
 
     def __repr__(self):
         """Return the string representation of the driver class."""
@@ -192,8 +193,8 @@ class Driver(object):
         """Wait for string FSM."""
         #                    0                         1                        2                        3
         events = [self.syntax_error_re, self.connection_closed_re, expected_string, self.press_return_re,
-                  #        4           5                 6                7
-                  self.more_re, pexpect.TIMEOUT, pexpect.EOF, self.buffer_overflow_re]
+                  #        4           5                 6                7                    8
+                  self.more_re, pexpect.TIMEOUT, pexpect.EOF, self.buffer_overflow_re, self.confirm_option_re]
 
         # add detected prompts chain
         events += self.device.get_previous_prompts()  # without target prompt
@@ -209,7 +210,8 @@ class Driver(object):
             (expected_string, [0, 1], -1, a_expected_prompt, 0),
             (self.press_return_re, [0], -1, a_stays_connected, 0),
             # TODO: Customize in XR driver
-            (self.buffer_overflow_re, [0], -1, CommandSyntaxError("Command too long", self.device.hostname), 0)
+            (self.buffer_overflow_re, [0], -1, CommandSyntaxError("Command too long", self.device.hostname), 0),
+            (self.confirm_option_re, [0], 0, partial(a_send, "yes"), 20)
         ]
 
         for prompt in self.device.get_previous_prompts():
