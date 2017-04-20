@@ -47,7 +47,7 @@ generic:
     - IOS
     - NX-OS
 
-  confirm_option: 'confirm'
+  confirm_option: '\[confirm\]'
   press_return: 'Press RETURN to get started\.'
   more: ' --More-- '
   connection_closed:
