@@ -222,6 +222,7 @@ class Device(object):
 
             try:
                 output = self.execute_command(cmd, timeout, wait_for_string, password)
+                logger.info("Output: {}".format(output))
             except ConnectionError:
                 logger.error("Connection lost. Disconnecting.")
                 # self.disconnect()
@@ -251,8 +252,10 @@ class Device(object):
                 raise ConnectionError("Unexpected session disconnect", host=self.hostname)
 
             if self.last_command_result:
+                logger.info("AJ: Last command result {}".format(self.last_command_result))
                 output = self.last_command_result.replace('\r', '')
             else:
+                logger.info("AJ: ctrl before {}".format(self.ctrl.before))
                 output = self.ctrl.before.replace('\r', '')
 
             # not needed. Fixes the issue #11

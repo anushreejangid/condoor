@@ -75,15 +75,17 @@ class Driver(Generic):
                   #        4           5                 6                7               8
                   self.more_re, pexpect.TIMEOUT, pexpect.EOF, self.calvados_re, self.calvados_connect_re,
                   #     9
-                  self.calvados_term_length]
+                  self.calvados_term_length, self.confirm_option_re]
 
         # add detected prompts chain
         events += self.device.get_previous_prompts()  # without target prompt
 
         logger.debug("Expecting: {}".format(pattern_to_str(expected_string)))
         logger.debug("Calvados prompt: {}".format(pattern_to_str(self.calvados_re)))
+        logger.debug("Confirm option prompt: {}".format(pattern_to_str(self.confirm_option_re)))
 
         transitions = [
+            (self.confirm_option_re, [0,1], -1 , partial(a_send, "yes"), 20),
             (self.syntax_error_re, [0], -1, CommandSyntaxError("Command unknown", self.device.hostname), 0),
             (self.connection_closed_re, [0], 1, a_connection_closed, 10),
             (pexpect.TIMEOUT, [0, 2], -1, CommandTimeoutError("Timeout waiting for prompt", self.device.hostname), 0),
@@ -103,6 +105,7 @@ class Driver(Generic):
             (self.calvados_re, [4], 5, None, 0),
             # ignore for command start
             (self.calvados_re, [5], 0, a_store_cmd_result, 0),
+            
         ]
 
         for prompt in self.device.get_previous_prompts():
