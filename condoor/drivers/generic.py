@@ -202,7 +202,7 @@ class Driver(object):
         logger.debug("Expecting: {}".format(pattern_to_str(expected_string)))
 
         transitions = [
-            (self.syntax_error_re, [0], -1, CommandSyntaxError("Command unknown", self.device.hostname), 0),
+            (self.syntax_error_re, [0], -1, None, 0),
             (self.connection_closed_re, [0], 1, a_connection_closed, 10),
             (pexpect.TIMEOUT, [0], -1, CommandTimeoutError("Timeout waiting for prompt", self.device.hostname), 0),
             (pexpect.EOF, [0, 1], -1, ConnectionError("Unexpected device disconnect", self.device.hostname), 0),
