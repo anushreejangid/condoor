@@ -59,7 +59,7 @@ class Driver(object):
     def get_version_text(self):
         """Return the version information from the device."""
         try:
-            version_text = self.device.send("show version brief", timeout=120)
+            version_text = self.device.send("show version", timeout=120)
         except CommandError:
             # IOS Hack - need to check if show version brief is supported on IOS/IOS XE
             version_text = self.device.send("show version", timeout=120)
