@@ -4,6 +4,7 @@ import os
 import time
 import shelve
 import logging
+import sys
 from hashlib import md5
 
 from collections import deque
@@ -13,7 +14,6 @@ from condoor.utils import FilteredFile, normalize_urls, make_handler
 from condoor.version import __version__
 
 logger = logging.getLogger(__name__)
-
 
 _CACHE_FILE = "/tmp/condoor." + __version__ + ".shelve"
 
@@ -80,6 +80,7 @@ class Connection(object):
 
         self.log_session = log_session
         top_logger = logging.getLogger("condoor")
+        top_logger.propagate = False
 
         if len(top_logger.handlers) == 0:
             self._handler = make_handler(log_dir, log_level)
@@ -91,7 +92,6 @@ class Connection(object):
             self.session_fd = self._make_session_fd(log_dir)
         else:
             self.session_fd = None
-
         top_logger.info("Condoor Version {}".format(__version__))
         top_logger.debug("Cache filename: {}".format(_CACHE_FILE))
 
