@@ -1,2 +1,2 @@
 pexpect>=4.2.1
-pyyaml
+pyyaml==5.3.1
