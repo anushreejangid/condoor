@@ -114,7 +114,7 @@ setup(
     package_data={'': ['LICENSE', ], },
     package_dir={'condoor': 'condoor'},
     include_package_data=True,
-    install_requires=['pexpect>=4.2.1', 'pyyaml'],
+    install_requires=['pexpect>=4.2.1', 'pyyaml==5.3.1'],
     data_files=[('condoor', ['condoor/patterns.yaml', 'condoor/config.yaml'])],
     license='Apache 2.0',
     classifiers=CLASSIFIERS,
